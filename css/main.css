@@ -1,0 +1,16 @@
+.slider {
+  height: 20px;
+  border: 1px solid #DDD;
+  border-width: 2px 0px;
+}
+.slider .handle {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background: url(../img/handle.png) no-repeat 0px 5px;
+  cursor: pointer;
+}
+.slider.large .handle {
+  width: 75px;
+  background-image: url(../img/handle-large.png);
+}

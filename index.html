@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>jQuery Slidestep plugin</title>
+
+		<link href="css/bootstrap.min.css" rel="stylesheet">
+		<link href="css/main.css" rel="stylesheet">
+		<link href="css/slidestep.css" rel="stylesheet">
+		
+		<script src="js/jquery-1.8.1.min.js"></script>
+		<script src="js/draggable-0.1.js"></script>
+		<script src="js/jquery.slidestep.js"></script>
+		
+
+	</head>
+	<body>
+	    <div class="container">
+
+	      <div class="page-header">
+	        <h1>jQuery Slidestep plugin <small><a href="">View project on GitHub</a></small></h1>
+	      </div>
+	      <p>jQuery</p>
+		  
+		  <h2>Demos</h2>
+		  
+		  <div class="row">
+			  <div class="span6"></div>
+			  <div class="span6">
+			  	<div id="slider-one" class="slider"></div>
+			  </div>
+			  <script>
+			  	$('#slider-one').slidestep({
+					min: 10,
+					max: 80,
+			  		slideOnClick: true
+			  	});
+			  </script>
+		  </div>
+		  <br />
+		  <br />
+		  <div class="row">
+			  <div class="span6"></div>
+			  <div class="span6">
+				  <div id="slider-two" class="slider large step"></div>
+			  </div>
+			  <script>
+			  	$('#slider-two').slidestep();
+			  </script>
+
+			  
+		  </div>
+		  
+		</div>
+	</body>
+</html>
