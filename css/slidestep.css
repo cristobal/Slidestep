@@ -1,12 +1,27 @@
 .slidestep {
   position: relative;
 }
-.slidestep .rail {
+.slidestep .rail,
+.slidestep .grid {
   position: absolute;
   left: 0;
   right: 0;
   top: 0;
   bottom: 0;
+}
+.slidestep .rail {
+  z-index: 2;
+}
+.slidestep .grid {
+  background-color: #f4f4f4;
+  z-index: 1;
+}
+.slidestep .grid .col {
+  width: 1px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background-color: #ccc;
 }
 .slidestep .rail .handle {
   position: absolute;

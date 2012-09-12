@@ -1,8 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+		  
 		<title>jQuery Slidestep plugin</title>
+		<meta name="description" content="">
+		<meta name="author" content="">
 
+		<meta name="viewport" content="initial-scale=1.0, minimum-scale=1.0, maximum-scale=2.0"/>
+		  
 		<link href="css/bootstrap.min.css" rel="stylesheet">
 		<link href="css/main.css" rel="stylesheet">
 		<link href="css/slidestep.css" rel="stylesheet">
@@ -30,21 +37,26 @@
 			  </div>
 			  <script>
 			  	$('#slider-one').slidestep({
-					min: 10,
-					max: 80,
+					log: true,
+					grid: true,
+					step: 5,
+					value: 30,
 			  		slideOnClick: true
 			  	});
 			  </script>
 		  </div>
 		  <br />
 		  <br />
+		  
 		  <div class="row">
 			  <div class="span6"></div>
 			  <div class="span6">
 				  <div id="slider-two" class="slider large step"></div>
 			  </div>
 			  <script>
-			  	$('#slider-two').slidestep();
+			  	$('#slider-two').slidestep({
+			  		slideOnClick: true
+			  	});
 			  </script>
 
 			  
