@@ -13,17 +13,15 @@
  * 
  * 
  **/
-// TODO: Build set with indices
 // TODO: Draggable
 // TODO: CSS3 Animations
-// TODO: Clean up mess with set/get var & meta
 ;(function ($) {
 	//--------------------------------------------------------------------------
 	//
 	//  Helper Lambda Functions
 	//
 	//-------------------------------------------------------------------------
-	var udf   = function(v) { return typeof(v) == "undefined"; };
+	var udf  = function(v) { return typeof(v) == "undefined"; };
 	
 	//--------------------------------------------------------------------------
 	//
@@ -79,33 +77,6 @@
 		
 		return items;
 	};
-
-	
-	//--------------------------------------------------------------------------
-	//
-	//  HashMap
-	//
-	//-------------------------------------------------------------------------
-	// HashMap: Object instance
-	function HashMap() {
-		var data = {};
-		return {
-			del: function (key) {
-				if (data.hasOwnProperty(key)) {
-					delete data[key];
-				}
-			},
-			
-			get: function(key) {
-				return data.hasOwnProperty(key) ? data[key] : null;
-			},
-			
-			set: function(key, value) {
-				data[key] = value;
-			}
-			
-		};
-	}
 	
 	
 	//--------------------------------------------------------------------------
@@ -351,16 +322,10 @@
 		var slidestep = $(el), 
 			handle    = null,
 			rail	  = null,
-			vars	  = null;
+			vars	  = null,
+			oitems	  = null;
 			
-			var descriptors = {
-				grid: 'boolean',
-				easing: 'string',
-				adjustOffset: 'boolean',
-				slideOnClick: 'boolean'
-			};
-			
-			var meta  = new HashMap();
+			var meta  = {};
 			var set	  = new Set();
 			var ciw   = ("console" in window);
 			 
@@ -377,10 +342,10 @@
 			
 			$(handle).attr('unselectable', 'on');
 			
-			set.build(vars.min, vars.max, vars.step);			
-			$.each(["adjustOffset", "grid", "log", "slideOnClick"], function(i, key) {
-				if (vars[key]) {
-					slidestep.set(key, true);
+			
+			$.each(["adjustOffset", "items", "grid", "log", "slideOnClick"], function(i, key) {
+				if (vars.hasOwnProperty(key)) {
+					slidestep.set(key, vars[key]);
 				}
 			});
 			
@@ -391,51 +356,30 @@
 		 * Log wrapper
 		 */
 		function log() {
-			if (meta.get('log') && ciw) {
+			if (getVar('log') && ciw) {
 				try { console.log.apply(console, arguments); }
 				catch(error) { /* fail silently console.log not supported */ }
 			}
 		}
 		
-		
 		/**
-		 * Set val
+		 * Call function
 		 *
-		 * @param value
+		 * @param cb
+		 * @param data
 		 */
-		function setVal (value) { vars.value = value; };
-		
-		/**
-		 * Get val
-		 *
-		 * @param
-		 */		
-		function getVal () { return vars.value ? vars.value : vars.min; };
+		function call(cb, data) {
+			if (vars[cb]) {
+				vars[cb](data);
+			}
+		}
 		
 		/**
 		 * Set var
 		 *
-		 * @param key 	 The key to set to the vars 
-		 * @param value  The value for the option
+		 * @param value
 		 */
-		function setVar (key, value) {
-			if (!vars.hasOwnProperty(key) || !(key in descriptors)) {
-				return;
-			}
-
-			switch(descriptors[key]) {
-				case 'boolean': {
-					vars[key] = value ? true : false;
-					break;
-				}
-				case 'string': {
-					vars[key] = String(value);
-					break;
-				}
-			}			
-			
-			return vars[key];
-		};
+		function setVar (key, value) { vars[key] = value; };
 		
 		/**
 		 * Get var
@@ -452,8 +396,8 @@
 			}
 			
 			var value = vars[key];
-			if (typeof(value) == 'object') {
-				value = $.extend({}, value); // return shallow copy if object
+			if (typeof(value) == 'object' && (typeof(value.length) != "function")) {
+				value = $.extend({}, value); // return shallow copy if object (not array)
 			}
 			
 			return value;
@@ -476,6 +420,9 @@
 				$(handle).css('left', prc + "%");
 			}
 			
+			setVar("prc", prc);
+			setVar("value", val);
+			call("onChange", {val: val, prc: prc});
 		};
 		
 		/**
@@ -580,8 +527,34 @@
 			}
 			
 			var prc = MathExt.val2prc(x, $(el).width());
+			
+			call("onSlide", {prc: prc, val: getVar("val")});
 			slideToPrc(prc);
 		};
+		
+		/**
+	 	 * 
+		 */
+		function keyVal(key, value, refresh) {
+			if (udf(value)) {
+				return slidestep.get(key);
+			}
+			setVar(key, value);
+			
+			if (udf(refresh)) {
+				refresh = true;
+			}
+			
+			if (refresh) {
+				slidestep.setItems(oitems);
+				if (slidestep.grid()) {
+					slidestep.grid(true);
+				}
+			}
+			
+			
+			return;
+		}
 		
 		
 		//--------------------------------------------------------------------------
@@ -598,6 +571,7 @@
 		 */
 		slidestep.set = function (option, value) {
 			if ((option in slidestep) && typeof(slidestep[option] == "function")) {
+				console.log(option, value);
 				slidestep[option](value);
 			}
 			else if ((option == "options") && value && (typeof(value) == 'object')) {
@@ -620,13 +594,168 @@
 		 * @param option Boolean value to wether enable logging or not
 		 */
 		slidestep.log = function (value) {
-			var key = 'log'; 
+			return keyVal('log', value, false);
+		};
+		
+		
+		/**
+		 * Min
+		 *
+		 * @param max The min value to get/set
+		 */
+		slidestep.min = function(value) {
+			return keyVal('min', value);
+		};
+		
+		/**
+		 * Step
+		 *
+		 * @param max The max value to get/set
+		 */
+		slidestep.max = function(value) {
+			return keyVal('max', value);
+		};
+		
+		/**
+		 * Step
+		 *
+		 * @param step The step value to get/set
+		 */
+		slidestep.step = function(value) {
+			return keyVal('step', value);
+		};
+		
+		/**
+		 * Value/val
+		 *
+		 * @param value The value to get/set
+		 */
+		slidestep.value = function(value) {
+			var key = 'value';
 			if (udf(value)) {
 				return slidestep.get(key);
 			}
 			
-			setVar(key, value);
-			meta.set(key, value);
+			var slide = true,
+				val   = value;
+			if (typeof(value) == "object") {
+				slide = value['slide'];
+				val   = value['value'];
+			}
+			
+			// if (isNaN(val)) {
+			// 	return;
+			// }
+			
+			if (slide) {
+				slideToVal(val);
+			}
+			else {
+				stepToVal(val);
+			}
+			
+		};
+		slidestep.val   = slidestep.value; // shortcut notation
+		
+		/**
+		 * Prc
+		 *
+		 * @param value The percentage value to get/set
+		 */
+		slidestep.prc = function(value) {
+			var key = 'prc';
+			if (udf(value)) {
+				return slidestep.get(key);
+			}
+			
+			var slide = true, 
+				prc   = value;
+			if (typeof(value) == "object") {
+				slide = value['slide'];
+				prc   = value['value'];
+			}
+			
+			// if (isNaN(prc)) {
+			// 	return;
+			// }
+			
+			if (slide) {
+				slideToPrc(prc);
+			}
+			else {
+				stepToPrc(prc);
+			}
+			
+		};
+		
+		/**
+		 * Items
+		 *
+		 * @param items The items to get/set, null or empty array to reset to auto build
+		 */
+		slidestep.items = function (value) {
+			var key = 'items'; 
+			if (udf(value)) {
+				return slidestep.get(key);
+			}
+				
+			var min  = getVar("min"),
+				max  = getVar("max"),
+				step = getVar("step");
+			var items = value,
+				isObj = true;
+			if (items && items.length > 1){
+				try {
+					isObj = typeof(items[0]) == "object";
+					if (!isObj) {
+						var val = min;
+						for (var i = items.length; i--;) {
+							items[i] = {
+								prc: items[i],
+								val: val
+							};
+							val += step;
+						}
+					}					
+					
+					if ((items[0].prc != 0) || (items[items.length - 1].prc != 100)) {
+						log(items);
+						log("prcs goes from 0..100 from the first object to the last object");
+						items = null;
+					}
+				}
+				catch(error) {
+					log("failed to build with given set of items");
+				}
+			}
+			
+			if (items) {
+				set.setItems(items);
+				if (isObj) {
+					// When obj specified by user create shallow copy of objects
+					oitems = new Array[items.length];
+					for(var n = items.length; n--;) {
+						oitems[i] = {
+							prc: items[i].prc,
+							val: items[i].val
+						};
+					}
+				}
+				else {
+					oitems = value.concat();
+				}
+			}
+			else {
+				set.build(min, max, step);
+				oitems = null;
+			}
+			
+			setVar(key, set.items());
+			
+			// Refresh slidestep
+			if (slidestep.grid()) {
+				slidestep.grid(true);
+			};
 			return;
 		};
 				
@@ -642,7 +771,6 @@
 			}
 			$(el).find('.grid').remove();
 			
-			setVar(key, value);
 			if (value) {
 				var html = '<div class="grid"></div>';
 				$(el).prepend(html);
@@ -660,10 +788,19 @@
 				});
 			}
 			
-			meta.set(key, value);
+			setVar(key, value);
 			return;
 		};
-		
+
+		/**
+		 * Draggable
+		 *
+		 * @param value  Boolean value to wether enable dragging or not
+		 */
+		slidestep.draggable = function(value) {
+			
+		};
+				
 		/**
 		 * Adjust offset
 		 *
@@ -675,9 +812,6 @@
 				return slidestep.get(key);
 			}
 			
-			setVar(key, value);
-			meta.set(key, value);
-			
 			var offset = value ? $(handle).width() : 0;
 			$(rail).css('right', offset + 'px');
 			
@@ -686,6 +820,7 @@
 				slidestep.grid(true);
 			};
 			
+			setVar(key, value);
 			return;
 		};
 		
@@ -700,16 +835,38 @@
 				return slidestep.get(key);
 			}
 			
-			setVar(key, value);
-			if (value && !meta.get(key)) {
+			
+			if (value && !meta[key]) {
 				$(el).on('click', handleSlideOnClick);
 			}
-			else if (meta.get(key)) {
+			else if (meta[key]) {
 				$(el).off('click', handleSlideOnClick);
 			}
-			
-			meta.set(key, value);
+			meta[key] = value;
+			setVar(key, value);
 			return;
+		};
+		
+
+
+		/**
+		 * Destroy
+		 *
+		 */
+		slidestep.destroy = function() {
+			slidestep.slideOnClick(false);
+			slidestep.draggable(false);
+			
+			$(el).removeClass('slidestep');
+			$(el).find('.rail').remove();
+			$(el).find('.grid').remove();
+			
+			set 	  = null;
+			$.each(["set", "get", "log", "min", "max", "step", "value", "val", "prc", "items", "grid", "draggable", "adjustOffset", "slideOnClick"], function(i, fn){
+				slidestep[fn] = null;
+			});
+			slidestep = null;
+			$(el).data('slidestep', null);
 		};
 		
 		// Slidestep: Initialize
@@ -724,7 +881,9 @@
 		max: 100,
 		step: 1,
 		value: 0,
+		items: null,
 		easing:  "swing",
+		draggable: true,
 		adjustOffset: true,
 		slideOnClick: false,
 		onSlide:  jQuery.noop,
@@ -740,7 +899,7 @@
 				new Slidestep(this, options);
 			}
 			else {
-				$(this).data('slidestep').set.apply(option, Array.prototype.slice.call( arguments, 1));
+				$(this).data('slidestep').set.apply(options, Array.prototype.slice.call( arguments, 1));
 			}
 		});
 	};
