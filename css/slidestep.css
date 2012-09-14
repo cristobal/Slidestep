@@ -23,6 +23,13 @@
   bottom: 0;
   background-color: #ccc;
 }
+.slidestep .grid .marker {
+  width: 1px;
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  background-color: #f14343;
+}
 .slidestep .rail .handle {
   position: absolute;
 }

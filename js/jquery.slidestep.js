@@ -13,7 +13,10 @@
  * 
  * 
  **/
+// TODO: Build set with indices
+// TODO: Draggable
 // TODO: CSS3 Animations
+// TODO: Clean up mess with set/get var & meta
 ;(function ($) {
 	//--------------------------------------------------------------------------
 	//
@@ -111,13 +114,57 @@
 	//
 	//-------------------------------------------------------------------------
 	// Set: Object instance
+	//--------------------------------------------------------------------------
+	//
+	//  Set
+	//
+	//-------------------------------------------------------------------------
+	// Set: Object instance
 	function Set() {
-		var items = [],
-			PL = {},
-			VL = {};
+		var L  = [],	// List `L` of items
+			PL = {},	// Hash of items to 
+			VL = {},
+			PD = true,
+			VD = true;
+	
+		/**
+		 * Find nearest 
+		 *
+		 * @param val
+		 * @param prop prc|val
+		 */
+		function findNearest(val, prop) {
+		
+			var i  = 0, 
+			    k  = L.length - 1,
+				v  = L[i][prop],
+				v2 = L[k][prop];
+			
+			if (val >= v2) {
+				i = k;
+			}
+			else if (val > v) {
+				// find nearest in between or exact match
+				var d, d2;
+				for (; k--;) {
+					v = L[k][prop];
+					if ((val >= v) && (val <= v2)) {
+						d  = val - v;
+						d2 = v2  - val;
+						i   = k + (d < d2 ? 0 : 1);
+						break;	
+					}
+					v2 = v;
+				}
+			}
+			
+			return L[i];		
+		};
+	
 		// normalize step by -1 since ArrayExt.range will return +1 item 
 		// due do <= condition in most cases
-		var P     = function(limit, size) { return Math.round(limit / (size - 1)); };  
+		var P = function(limit, size) { return Math.round(limit / (size - 1)); };  
+	
 	
 		return {
 		
@@ -135,21 +182,69 @@
 					s  = P(l, values.length),
 					prcs   = ArrayExt.range(i, l, s);  
 			
-				// should the cas be that the prcs.length be an item less than the values we append the last value
+				// should the case be that the prcs.length be an item less than the values we append the last value
 				if (prcs.length < values.length) {
 					prcs.push(l);
 				}
-				
-				PL = {}; VL = {};
-				items = new Array(prcs.length);
-				for (i = items.length; i--;) {
-					items[i] = {
+			
+				PD = true; VD = true; 
+				PL = {};   VL = {};
+				L = new Array(prcs.length);
+				for (i = L.length; i--;) {
+					L[i] = {
 						prc: prcs[i],
 						val: values[i]
 					};
 					PL[values[i]] = prcs[i];
 					VL[prcs[i]]   = values[i];
 				}
+			},
+		
+			/**
+			 * Set items
+			 *
+			 * @param items
+			 */
+			setItems: function (items) {
+
+				PL = {};   VL = {};
+				L  = new Array(items.length);
+				var i, prc, val, prc2, val2;
+				var pdc = 0, ps = {},
+					vdc = 0, vs = {};
+				for (i = L.length; i--;)  {
+					prc = items[i].prc;
+					val = items[i].val;
+					L[i] = {
+						prc: prc,
+						val: val
+					};
+					PL[val] = prc;
+					VL[prc] = val;
+				
+				
+					if (prc2 && PD) {
+						prc2 = prc2 - prc;
+						if(!ps[prc2]) {
+							pdc++;
+							ps[prc2] = true;	
+						}
+					}
+					if (val2 && VD) {
+						val2 = val2 - val;
+						if(!vs[val2]) {
+							vdc++;
+							vs[val2] = true;	
+						}
+
+					}
+				
+					prc2 = prc;
+					val2 = val;
+				}
+			
+				PD = pdc <= 1;
+				VD = vdc <= 1;
 			},
 			
 			/**
@@ -158,11 +253,11 @@
 			items: function() {
 				
 				// return shallow copy
-				var c = new Array(items.length);
-				for (var i = items.length; i--;) {
+				var c = new Array(L.length);
+				for (var i = L.length; i--;) {
 					c[i] = {
-						prc: items[i].prc,
-						val: items[i].val
+						prc: L[i].prc,
+						val: L[i].val
 					};
 				}
 				return c; 
@@ -174,13 +269,22 @@
 			 * @param prc
 			 */
 			findVal: function(prc) {
-				var s  = P(100, items.length),	// 1. find step `s`
-					m  = prc % s,				// 2. find modulo diff `m`
-					v  = prc - m,				// 3. find nearest value `v`, which is the prc less the modulo
-					v2 = v + s,					// 4. find next value `v2`, which is `v + s`
-					d  = m,						// 5. find distance `d` for `v`, which is the distance for `prc` from `v`
-					d2 = v2 - prc;				// 6. find distance `d2` for `v2`, which is the distance for `prc` from `v2`
-				return d < d2 ? v : v2;			// 7. return `v` if `prc` is closer to `v` by d, otherwise return v2.
+				if (L.length == 0) {
+					return NaN;
+				}
+			
+				if (!PD) {
+					return findNearest(prc, 'prc').val;
+				}
+			
+			
+				var s  = P(100, L.length),	// 1. find step `s`
+					m  = prc % s,			// 2. find modulo diff `m`
+					v  = prc - m,			// 3. find nearest value `v`, which is the prc less the modulo
+					v2 = v + s,				// 4. find next value `v2`, which is `v + s`
+					d  = m,					// 5. find distance `d` for `v`, which is the distance for `prc` from `v`
+					d2 = v2 - prc;			// 6. find distance `d2` for `v2`, which is the distance for `prc` from `v2`
+				return d < d2 ? v : v2;		// 7. return `v` if `prc` is closer to `v` by d, otherwise return v2.
 			},
 			
 			/**
@@ -199,23 +303,32 @@
 			 * @param val
 			 */
 			findPrc: function(val) {
-				var i  = 0,						// 1. set `i` to 0 
-					k  = items.length - 1, 		// 2. get `k` 
-					v  = items[i].val,			// 3. set `v`  to `items[0]`
-					v2 = items[k].val,			// 4. set `v2` to `items[k]`
-					s  = (v2 - v) / k;			// 5. set `s`  to the step value for the items  
-				
-				if (val >= v2) {				// 6. if `val` greater than last value `v2` `
-					i = k;						//    	fix `i` to `k
+				if (L.length == 0) {
+					return NaN;
 				}
-				else if (val > v){				// 7. if `val` greater than first value `v` 
+			
+				if (!VD) {
+					return findNearest(val, 'val').prc;
+				}
+
+			
+				var i  = 0,					// 1. set `i` to 0 
+					k  = L.length - 1, 		// 2. get `k` 
+					v  = L[i].val,			// 3. set `v`  to `L[0]`
+					v2 = L[k].val,			// 4. set `v2` to `L[k]`
+					s  = (v2 - v) / k;		// 5. set `s`  to the step value for the list `L`  
+				
+				if (val >= v2) {			// 6. if `val` greater than last value `v2` `
+					i = k;					//    	fix `i` to `k
+				}
+				else if (val > v){			// 7. if `val` greater than first value `v` 
 					i = Math.round((val - v) / s); // 	round `i` to nearest key `i` 
 				}
 			
-				return items[i].prc;			// return `prc` present in item[i]; 
-												// defaults to first item in the array if none of the  conditions 6 & 7 incur.
+				return L[i].prc;			// 8. return `prc` present in the list L[i]; 
+											// 	  defaults to first item in the list `L` if none of the  conditions 6 & 7 incur.
 			},
-			
+		
 			/**
 			 * Find prc by val
 			 *	Fast lookup
@@ -227,7 +340,6 @@
 			}
 		};
 	};
-
 	
 	//--------------------------------------------------------------------------
 	//
@@ -363,6 +475,7 @@
 			else {
 				$(handle).css('left', prc + "%");
 			}
+			
 		};
 		
 		/**
@@ -487,7 +600,7 @@
 			if ((option in slidestep) && typeof(slidestep[option] == "function")) {
 				slidestep[option](value);
 			}
-			else if ((option == "options") && value && (typeof(value) == 'object')){
+			else if ((option == "options") && value && (typeof(value) == 'object')) {
 				for (option in value) {
 					slidestep.set(option, value[option]);
 				}
@@ -537,8 +650,12 @@
 				var offset = slidestep.adjustOffset() ? $(handle).width() : 0;
 				$(el).find('.grid').css('right', offset + 'px');	
 				
+				offset = MathExt.val2prc($(handle).width(), $(rail).width()) / 2;
 				$.each(set.items(), function(key, item){
-					html = '<div class="col" style="position: absolute; left: ' + item.prc + '%"></div>';
+					html   = '<div class="col" style="position: absolute; left: ' + item.prc + '%"></div>';
+					$(el).find('.grid').append(html);
+					
+					html   = '<div class="marker" style="position: absolute; left: ' + (item.prc + offset) + '%"></div>';
 					$(el).find('.grid').append(html);
 				});
 			}
