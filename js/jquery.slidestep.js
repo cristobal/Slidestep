@@ -13,8 +13,8 @@
  * 
  * 
  **/
-// TODO: Draggable
-// TODO: Magnetize
+// TODO: Add support for overriding the animate options
+// TODO: Add animate otions on magnetize when large distances otherwise snap only.
 // TODO: CSS3 Animations for click when supported
 ;(function ($) {
 	//--------------------------------------------------------------------------
@@ -87,7 +87,9 @@
 			
 			$(handle).attr('unselectable', 'on');
 			
-			draggable = new Draggable(handle, rail);
+			draggable = new Draggable(handle, rail, {
+				onEnd: handleDraggableEnd
+			});
 			
 			$.each(["adjustOffset", "items", "grid", "log", "draggable", "slideOnClick"], function(i, key) {
 				if (vars.hasOwnProperty(key)) {
@@ -102,7 +104,7 @@
 		 * Log
 		 */
 		function log() {
-			if (this.enabled && ciw) {
+			if (vars.log && ciw) {
 				try { console.log.apply(console, arguments); }
 				catch (error) { /* fail silently console.log not supported */ }	
 			}
@@ -306,6 +308,17 @@
 			call("onSlide", {prc: prc, val: getVar("val")});
 			slideToPrc(prc);
 		};
+		
+		/**
+		 * Handle draggable end
+		 *
+		 * @param event
+		 */
+		function handleDraggableEnd (data) {
+			if (vars.magnetize) {
+				moveToPrc(data.prc);
+			}
+		}
 		
 		//--------------------------------------------------------------------------
 		//

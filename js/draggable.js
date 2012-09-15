@@ -13,6 +13,8 @@
  * @version 0.1 ($Id$)
  * 
  **/
+ // TODO: Test in IE8+
+ // TODO: Test in Mobile devices
  // TODO: Add support for vertical scrolling
  // TODO: Add support for both x,y 
  // TODO: Add support for scroll along axis / or \
@@ -24,9 +26,11 @@
 	//
 	//-------------------------------------------------------------------------	
 	/* check if variable is undefined */
-	var udf = function (v) { return typeof(v) == "undefined"; };
-		
+	var udf		= function (v) { return typeof(v) == "undefined"; };
+	var val2prc = function (x, t) { return (100 * x) / t; };		
+	
 	var defaults = {
+		usePercentage: true,
 		onStart:  $.noop,
 		// onMove:   $.noop,
 		onChange: $.noop,
@@ -50,12 +54,13 @@
 	//-------------------------------------------------------------------------	
 	function Draggable(element, container, options) {
 		
-		options = jQuery.extend({}, defaults, options);
+		var vars = jQuery.extend({}, defaults, options);
 		
 		var meta        = {},
 			drag        = false,
 			lastLeft    = $(element).position().left,
 			lastEvent   = null,
+			lastPrc		= val2prc(lastLeft, $(container).width()),
 			originEvent = null;
 
 			
@@ -76,6 +81,28 @@
 				vars[cb](data);
 			}
 		}
+		
+		/**
+		 * Moveto
+		 *
+		 * @param val The new left value where to move the object
+		 */
+		function moveTo(val) {
+
+			if (lastLeft != val) {
+				var prc = val2prc(val, $(container).width());
+				if (vars.usePercentage) {
+					$(element).css('left', prc + "%");
+				}
+				else {
+					$(element).css('left', val + "px");
+				}
+				call("onChange", {event: lastEvent, left: val, prc: lastPrc});
+				
+				lastPrc  = prc;
+				lastLeft = val;
+			}
+		}
 
 			
 		//--------------------------------------------------------------------------
@@ -92,14 +119,15 @@
 		function handleMouseDown(event) {
 			if (!drag) {
 				// console.log("start dragging");
-				call(options.onStart, {event: event, left: lastLeft});
+				call("onStart", {event: event, left: lastLeft, prc: lastPrc});
 			}
 			
 			drag = true;			
 			if (isMobile) {
-	   		 	var orig	 = event.originalEvent;  
-	   		 	var position = $(element).position();
-	   		 	originEvent  = {x: orig.changedTouches[0].pageX - position.left};				
+				var orig     = event.originalEvent,
+					position = $(element).position();
+				
+				originEvent  = {x: orig.changedTouches[0].pageX - position.left};				
 			}
 			lastEvent = event;
 		}
@@ -113,7 +141,7 @@
 		function handleMouseUp(event) {
 			if (drag) {
 				// console.log("stop dragging");
-				call(options.onEnd, {event: lastEvent, left: lastLeft});
+				call("onEnd", {event: lastEvent, left: lastLeft, prc: lastPrc});
 			}
 			
 			drag      = false;
@@ -147,12 +175,10 @@
 			else if (left > max) {
 				left = max;
 			}
-			$(element).css('left', left + "px");
+			
+			moveTo(left);
+			
 			lastEvent = event;
-			if (lastLeft != left) {
-				call(options.onChange, {event: lastEvent, left: left});
-			}
-			lastLeft  = left;
 		}
 		
 		/**
@@ -165,7 +191,7 @@
 				return true;
 			}
 			
-	   		var orig = event.originalEvent.touches[0] || event.originalEvent.changedTouches[0], 
+			var orig = (event.originalEvent.touches[0] || event.originalEvent.changedTouches[0]), 
 				left =  orig.pageX - originEvent.x,
 				min  = 0,
 				max  = $(container).width();
@@ -176,15 +202,10 @@
 			else if (left > max) {
 				left = max;
 			}
-		 	
-			$(element).css('left', left + "px");
-	   		
-			lastEvent = event;
-			if (lastLeft != left) {
-				call(options.onChange, {event: lastEvent, left: left});
-			}
-			lastLeft  = left;
 			
+			moveTo(left);
+			
+			lastEvent = event;			
 			return false;
 		}
 		
@@ -238,7 +259,7 @@
 			 */
 			destroy: function () {
 				this.enabled(false);
-				meta = null;
+				// cleanup vars?
 			}
 		};
 	}
