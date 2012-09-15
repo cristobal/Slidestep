@@ -32,4 +32,5 @@
 }
 .slidestep .rail .handle {
   position: absolute;
+  cursor: pointer;
 }
