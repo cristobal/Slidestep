@@ -25,10 +25,14 @@
 	//  Helper methods & Variables
 	//
 	//-------------------------------------------------------------------------	
+	
 	/* check if variable is undefined */
 	var udf		= function (v) { return typeof(v) == "undefined"; };
+	
+	/* convert value to prc */
 	var val2prc = function (x, t) { return (100 * x) / t; };		
 	
+	/* default options */
 	var defaults = {
 		usePercentage: true,
 		onStart:  $.noop,
@@ -37,6 +41,7 @@
 		onEnd:    $.noop
 	};
 	
+	/* events & mobile */
 	var isMobile = /android|iphone|ipad|mobile/i.test(navigator.userAgent);
 	var events = {
 		"click"  : isMobile ? "touchstart" : "click",
@@ -59,8 +64,8 @@
 		var meta        = {},
 			drag        = false,
 			lastLeft    = $(element).position().left,
-			lastEvent   = null,
 			lastPrc		= val2prc(lastLeft, $(container).width()),
+			lastEvent   = null,
 			originEvent = null;
 
 			
