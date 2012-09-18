@@ -75,6 +75,24 @@
 	/* normalize step by -1 since range range will return +1 item in most cases due to the <= condition */
 	var ns = function (limit, size) { return Math.round(limit / (size - 1)); };
 	
+	/**
+	 * Range
+	 *
+	 * @param start Start value
+	 * @param limit Limit value
+	 * @param step  Optional step (default 1)
+	 */
+	var range = function (start, limit, step) {
+		if (udf(step)) {
+			step = 1;
+		}
+		
+		var items = [];
+		for (var value = start; value <= limit; value += step) {
+			items.push(value);
+		}
+		return items;		
+	};
 	
 	//--------------------------------------------------------------------------
 	//
@@ -95,25 +113,6 @@
 		//  Private methods
 		//
 		//-------------------------------------------------------------------------	
-	
-		/**
-		 * Range
-		 *
-		 * @param start Start value
-		 * @param limit Limit value
-		 * @param step  Optional step (default 1)
-		 */
-		function range(start, limit, step) {
-			if (udf(step)) {
-				step = 1;
-			}
-		
-			var items = [];
-			for (var value = start; value <= limit; value += step) {
-				items.push(value);
-			}
-			return items;		
-		}
 	
 		/**
 		 * Find nearest
