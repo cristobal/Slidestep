@@ -113,6 +113,23 @@
 		//  Private methods
 		//
 		//-------------------------------------------------------------------------	
+		
+		/**
+		 * Find index val
+		 *
+		 * @param val
+		 * @param prop prc|val
+		 */
+		function findIndexBy(val, prop) {
+			var index = -1;
+			for (var i = L.length; i--;) {
+				if (L[i][prop] == val) {
+					index = i;
+					break;
+				}
+			}
+			return index;
+		}
 	
 		/**
 		 * Find nearest
@@ -371,6 +388,16 @@
 			findValByPrc: function (prc) {
 				return (VL.hasOwnProperty(prc) ? VL[prc] : null);
 			},
+			
+			/**
+			 * Find index by prc
+			 *
+			 * @param prc The percentage value to find the index on.
+			 * @return Returns a index if the prc value is present in the items otherwise -1
+			 */			
+			findIndexByPrc: function (prc) {
+				return findIndexBy(prc, 'prc');
+			},
 		
 			/**
 			 * Find prc
@@ -401,6 +428,16 @@
 			 */
 			findPrcByVal: function (val) {
 				return (PL.hasOwnProperty(val) ? PL[val] : null);
+			},
+			
+			/**
+			 * Find index by val
+			 *
+			 * @param val The value to find the index on.
+			 * @return Returns a index if the val is present in the items otherwise -1
+			 */	
+			findIndexByVal: function (val) {
+				return findIndexBy(val, 'val');
 			}
 		};	
 	}

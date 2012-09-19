@@ -17,7 +17,7 @@
  // TODO: Test in Mobile devices
  // TODO: Add support for vertical scrolling
  // TODO: Add support for both x,y 
- // TODO: Add support for scroll along axis / or \
+ // TODO: Add support for diagonal scrolling
 (function ($) {
 	
 	//--------------------------------------------------------------------------
@@ -214,8 +214,6 @@
 			return false;
 		}
 		
-		
-		
 		//--------------------------------------------------------------------------
 		//
 		//  Public API
@@ -249,7 +247,7 @@
 					$(element).off(events.cancel, handleMouseCancel);
 					
 					$(document).off(events.up, handleMouseUp);
-				    $(document).off(events.move, handleMouseMove);					
+				    $(document).off(events.move, handleMouseMove);
 				}
 				meta.enabled = value;
 			},
@@ -264,7 +262,10 @@
 			 */
 			destroy: function () {
 				this.enabled(false);
-				// cleanup vars?
+				
+				meta        = null;
+				lastEvent   = null;
+				originEvent = null;
 			}
 		};
 	}
