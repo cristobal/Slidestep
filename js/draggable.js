@@ -27,7 +27,7 @@
 	//-------------------------------------------------------------------------	
 	
 	/* check if variable is undefined */
-	var udf		= function (v) { return typeof(v) == "undefined"; };
+	var udf		= function (v) { return typeof(v) === "undefined"; };
 	
 	/* convert value to prc */
 	var val2prc = function (x, t) { return (100 * x) / t; };		

@@ -14,3 +14,10 @@
   width: 75px;
   background-image: url(../img/handle-large.png);
 }
+.slider .rail .unselectable,
+.slider .rail .unselectable * {
+  -moz-user-select: -moz-none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

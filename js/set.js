@@ -59,7 +59,7 @@
  * Licensed under the MIT (MIT-LICENSE.txt).
  *
  * @author Cristobal Dabed
- * @version 0.1.0-BETA ($Id$)
+ * @version 0.1
  * 
  **/
 (function () {
@@ -70,7 +70,7 @@
 	//
 	//-------------------------------------------------------------------------	
 	/* check if variable is undefined */
-	var udf = function (v) { return typeof(v) == "undefined"; };
+	var udf = function (v) { return typeof(v) === "undefined"; };
 		
 	/* normalize step by -1 since range range will return +1 item in most cases due to the <= condition */
 	var ns = function (limit, size) { return Math.round(limit / (size - 1)); };
@@ -165,7 +165,7 @@
 				if (!up) {
 					var d  = val - L[i - 1][prop],
 						d2 = L[i][prop]  - val;
-					if (d == d2) {
+					if (d === d2) {
 						i--;
 					}
 				
@@ -222,7 +222,7 @@
 		 */
 		function copyItems(prop) {
 			var c = new Array(L.length), 
-				a = (prop == "all");
+				a = (prop === "all");
 			for (var i = L.length; i--;) {
 				if (a) {
 					c[i] = {

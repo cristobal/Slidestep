@@ -11,18 +11,19 @@
  * @version 0.1
  * 
  * Dependencies
- * 
- * 
+ *  - jQuery 1.7 >= (http://jquery.com)
+ *  - Set
+ *  - Draggable
  **/
-// TODO: CSS3 Animations for click when supported
+// TODO: Use CSS3 Animations when supported.
 (function ($) {
 	//--------------------------------------------------------------------------
 	//
 	//  Helper Functions
 	//
 	//-------------------------------------------------------------------------
-	var udf      = function (v) { return typeof(v) == "undefined"; };
-	var isTypeof = function (v, t) { return typeof(v) == t; };
+	var udf      = function (v) { return typeof(v) === "undefined"; };
+	var isTypeof = function (v, t) { return typeof(v) === t; };
 	
 	//--------------------------------------------------------------------------
 	//
@@ -179,7 +180,7 @@
 		 * @param key The option parameter value we want to retrieve
 		 */
 		function getVar(key) {
-			if (key == "options") {
+			if (key === "options") {
 				return $.extend({}, vars); // get shallow copy of all options
 			}
 			
@@ -383,7 +384,7 @@
 		 * @param event
 		 */
 		function handleSlideOnClick(event) {
-			if ((event.target == handle) || !event) {
+			if ((event.target === handle) || !event) {
 				return;
 			}
 			
@@ -428,7 +429,7 @@
 				if ((option in slidestep) && isTypeof(slidestep[option], "function")) {
 					slidestep[option](value);
 				}
-				else if ((option == "options") && isTypeof(value, 'object')) {
+				else if ((option === "options") && isTypeof(value, 'object')) {
 					for (option in value) {
 						slidestep.set(option, value[option]);
 					}
@@ -565,7 +566,7 @@
 								val -= step;
 							}
 						}
-						if ((items[0].prc !== 0) || (items[items.length - 1].prc != 100)) {
+						if ((items[0].prc !== 0) || (items[items.length - 1].prc !== 100)) {
 							log("prcs goes from 0..100 from the first object to the last object");
 							items = null;
 						}
@@ -666,6 +667,15 @@
 			
 				setVar(key, value);
 				return;				
+			},
+			
+			/**
+			 * Magnetize
+			 *
+			 * @param option Boolean value to wether enable magnetize or not
+			 */
+			magnetize: function (value) {
+				return keyVal('magnetize', value, false);
 			},
 			
 			/**
