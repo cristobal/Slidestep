@@ -36,7 +36,7 @@
 	var defaults = {
 		usePercentage: true,
 		onStart:  $.noop,
-		// onMove:   $.noop,
+		//onMove:   $.noop,
 		onChange: $.noop,
 		onEnd:    $.noop
 	};
@@ -135,6 +135,7 @@
 				originEvent  = {x: orig.changedTouches[0].pageX - position.left};				
 			}
 			lastEvent = event;
+			return false;
 		}
 		
 		
@@ -184,6 +185,7 @@
 			moveTo(left);
 			
 			lastEvent = event;
+			return false;
 		}
 		
 		/**

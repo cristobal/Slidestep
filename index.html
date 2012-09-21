@@ -19,70 +19,289 @@
 		<script src="js/draggable.js"></script>
 		<script src="js/jquery.slidestep.js"></script>
 		
+		<script type="text/javascript" src="http://cdnjs.cloudflare.com/ajax/libs/prettify/188.0.0/prettify.js"></script>
+		<script>
+			$(document).ready(function() {
+			 	window.prettyPrint && prettyPrint();	
+			});
+		</script>
+		<style>
+			h3	{color: #3a87ad; }
+			
+			/* @group prettyprint */
+			.com { color: #93a1a1; }
+			.lit { color: #195f91; }
+			.pun, .opn, .clo { color: #93a1a1; }
+			.fun { color: #dc322f; }
+			.str, .atv { color: #D14; }
+			.kwd, .linenums .tag { color: #1e347b; }
+			.typ, .atn, .dec, .var { color: teal; }
+			.pln { color: #48484c; }
 
+			.prettyprint {
+			  padding: 8px;
+			  background-color: #f7f7f9;
+			  border: 1px solid #e1e1e8;
+			}
+			.prettyprint.linenums {
+			  -webkit-box-shadow: inset 40px 0 0 #fbfbfc, inset 41px 0 0 #ececf0;
+			     -moz-box-shadow: inset 40px 0 0 #fbfbfc, inset 41px 0 0 #ececf0;
+			          box-shadow: inset 40px 0 0 #fbfbfc, inset 41px 0 0 #ececf0;
+			}
+
+			/* Specify class=linenums on a pre to get line numbering */
+			ol.linenums {
+			  margin: 0 0 0 33px; /* IE indents via margin-left */
+			} 
+			ol.linenums li {
+			  padding-left: 12px;
+			  color: #bebec5;
+			  line-height: 18px;
+			  text-shadow: 0 1px 0 #fff;
+			}
+			/* @end */
+		</style>
 	</head>
 	<body>
 	    <div class="container">
 
 	      <div class="page-header">
-	        <h1>jQuery Slidestep plugin <small><a href="">View project on GitHub</a></small></h1>
+	        <h1>jQuery Slidestep plugin</h1>
 	      </div>
-	      <p>jQuery</p>
+	      <p>
+			  jQuery Slidestep is an alternative slider/stepper to the normally used <a href="http://jqueryui.com/demos/slider/" target="jqueryui-slider">jQuery UI slider</a>.<br />
+			  In addition to support the standard behaviours/options of a slider it also supports the following:
+			  <ul>
+				  <li>Specifying non-distributed values.</li>
+				  <li>Slide on click, move the handle to the point clicked on the slider.</li>
+				  <li>Magnetize, snap the handle to the nearest value on the slider when dragging.</li>
+				  <li>Automatically takes into account the width of the handle as part of the area used for the slider <small>(can be toggled off)</small>.</li>
+				  <li>Debug options such as grid/log to make development and testing easier.</li>
+			 </ul>
+		  </p>
 		  
 		  <h2>Demos</h2>
-		  
+
+		  <h3>Basic example</h3>
 		  <div class="row">
-			  <div class="span6"></div>
 			  <div class="span6">
-			  	<div id="slider-one" class="slider"></div>
+			  	<pre class="prettyprint linenums">
+$('#slider-one').slidestep({
+  step: 5,
+  value: 20,
+  onChange: function(data) { … }
+});
+</pre>
 			  </div>
+			  <div class="span6">
+			  	<div id="slider-one" class="slider"></div><br />
+			  </div>
+			 <div class="span4">
+				 <form id="slider-one-value" class="form-search" autocomplete="off">
+					 <input type="text" class="input-small">
+					 <button type="button" class="btn">Update</button><br /><br />
+					 <span class="help-block">Value will always snap to a value in the distributed set of values.</span>
+				 </form>
+			 </div>
+			 <div class="span2">
+				<form id="slider-one-options" class="form-inline" autocomplete="off">
+				    <label class="checkbox"><input class="grid" type="checkbox"> Show grid</label>
+					<label class="checkbox"><input class="slideOnClick" type="checkbox"> Slide on click</label>
+					<label class="checkbox"><input class="magnetize" type="checkbox"> Magnetize</label>
+				</form>
+			</div>
 			  <script>
 			  	$('#slider-one').slidestep({
-					grid: true,
 					step: 5,
-					value: 30,
-			  		slideOnClick: true
+					value: 20,
+					onChange: function(data) {
+						$('#slider-one-value input[type=text]').val(data.pos.val);
+					}
 			  	});
+				
+				// toggle grid
+				$('#slider-one-options .grid').on('click', function(event) {
+					var value = $(this).is(':checked');
+					$('#slider-one').data('slidestep').grid(value);
+				});
+				
+				// toggle slide on click
+				$('#slider-one-options .slideOnClick').on('click', function(event) {
+					var value = $(this).is(':checked');
+					$('#slider-one').data('slidestep').slideOnClick(value);
+				});
+				
+				// toggle magnetize
+				$('#slider-one-options .magnetize').on('click', function(event) {
+					var value = $(this).is(':checked');
+					$('#slider-one').data('slidestep').magnetize(value);
+				});
+				
+				// toggle update value
+				$('#slider-one-value .btn').on('click', function(event) {
+					var value = Number($('#slider-one-value input').val());
+					$('#slider-one').data('slidestep').value(value);
+				});
 			  </script>
 		  </div>
 		  <br />
 		  <br />
 		  
+		  <h3>Non distributed example</h3>
 		  <div class="row">
-			  <div class="span6"></div>
 			  <div class="span6">
-			  	<div id="slider-two" class="slider"></div>
+  			  	<pre class="prettyprint linenums">
+$('#slider-two').slidestep({
+    step: 5,
+    value: 10,
+    items: [0, 15, 45, 50, 80, 90, 100],
+    grid: true,
+    magnetize: true,
+    slideOnClick: true,
+    onChange: function(data) { … }
+});</pre>
 			  </div>
-			  <script>
+			  <div class="span6">
+			  	<div id="slider-two" class="slider"></div><br />
+			  </div>
+ 			 <div class="span4">
+ 				 <form id="slider-two-value" class="form-search" autocomplete="off">
+ 					 <input type="text" class="input-small">
+ 					 <button type="button" class="btn">Update</button><br /><br />
+ 					 <span class="help-block">Value will always snap to a value in the distributed set of values.</span>
+ 				 </form>
+ 			 </div>
+ 			 <div class="span2">
+ 				<form id="slider-two-options" class="form-inline" autocomplete="off">
+ 				    <label class="checkbox"><input class="grid" type="checkbox" checked="checked"> Show grid</label>
+ 					<label class="checkbox"><input class="slideOnClick" type="checkbox" checked="checked"> Slide on click</label>
+ 					<label class="checkbox"><input class="magnetize" type="checkbox" checked="checked"> Magnetize</label>
+ 				</form>
+ 			</div>
+ 			  <script>
 			  	$('#slider-two').slidestep({
-					log: true,
-					grid: true,
 					step: 5,
 					value: 10,
-					magnetize: true,
 					items: [0, 15, 45, 50, 80, 90, 100],
-			  		slideOnClick: true
-			  	});
-			  </script>
+					grid: true,
+					magnetize: true,
+		  			slideOnClick: true,
+					onChange: function(data) {
+						$('#slider-two-value input[type=text]').val(data.pos.val);
+					}
+		  		});
+
+				
+ 				// toggle grid
+ 				$('#slider-two-options .grid').on('click', function(event) {
+ 					var value = $(this).is(':checked');
+ 					$('#slider-two').data('slidestep').grid(value);
+ 				});
+				
+ 				// toggle slide on click
+ 				$('#slider-two-options .slideOnClick').on('click', function(event) {
+ 					var value = $(this).is(':checked');
+ 					$('#slider-two').data('slidestep').slideOnClick(value);
+ 				});
+				
+ 				// toggle magnetize
+ 				$('#slider-two-options .magnetize').on('click', function(event) {
+ 					var value = $(this).is(':checked');
+ 					$('#slider-two').data('slidestep').magnetize(value);
+ 				});
+				
+ 				// toggle update value
+ 				$('#slider-two-value .btn').on('click', function(event) {
+ 					var value = Number($('#slider-two-value input').val());
+ 					$('#slider-two').data('slidestep').value(value);
+ 				});
+ 			  </script>
 		  </div>
 		  <br />
 		  <br />
 		  
 		  
+		  <h3>Toggle adjust offset example</h3>
 		  <div class="row">
-			  <div class="span6"></div>
 			  <div class="span6">
-				  <div id="slider-three" class="slider large step"></div>
+    			  	<pre class="prettyprint linenums">
+$('#slider-three').slidestep({
+      min: 0,
+      max: 50,
+      step: 1,
+      grid: true,
+      adjustOffset: false, /* default true */
+      onChange: function(data) { … }
+});</pre>			  	
 			  </div>
+			  <div class="span6">
+				  <div id="slider-three" class="slider large step"></div><br />
+			  </div>
+  			 <div class="span4">
+  				 <form id="slider-three-value" class="form-search" autocomplete="off">
+  					 <input type="text" class="input-small">
+  					 <button type="button" class="btn">Update</button><br /><br />
+  					 <span class="help-block">Value will always snap to a value in the distributed set of values.</span>
+  				 </form>
+  			 </div>
+  			 <div class="span2">
+  				<form id="slider-three-options" class="form-inline" autocomplete="off">
+  				    <label class="checkbox"><input class="adjustOffset" type="checkbox"> Adjust offset</label>
+					<label class="checkbox"><input class="grid" type="checkbox" checked="checked"> Show grid</label>
+  					<!-- <label class="checkbox"><input class="slideOnClick" type="checkbox"> Slide on click</label>
+  					<label class="checkbox"><input class="magnetize" type="checkbox"> Magnetize</label> -->
+  				</form>
+  			</div>			  
 			  <script>
 			  	$('#slider-three').slidestep({
-			  		slideOnClick: true
+			        min: 0,
+					max: 30,
+					step: 3,
+			        grid: true,
+			        adjustOffset: false /* default value true */,
+					onChange: function(data) {
+						$('#slider-three-value input[type=text]').val(data.pos.val);
+					}										
 			  	});
-			  </script>
+
+ 				// adjust offset
+ 				$('#slider-three-options .adjustOffset').on('click', function(event) {
+ 					var value = $(this).is(':checked');
+ 					$('#slider-three').data('slidestep').adjustOffset(value);
+ 				});
+								
+ 				// toggle grid
+ 				$('#slider-three-options .grid').on('click', function(event) {
+ 					var value = $(this).is(':checked');
+ 					$('#slider-three').data('slidestep').grid(value);
+ 				});
+				
+ 				// toggle slide on click
+ 				$('#slider-three-options .slideOnClick').on('click', function(event) {
+ 					var value = $(this).is(':checked');
+ 					$('#slider-three').data('slidestep').slideOnClick(value);
+ 				});
+				
+ 				// toggle magnetize
+ 				$('#slider-three-options .magnetize').on('click', function(event) {
+ 					var value = $(this).is(':checked');
+ 					$('#slider-three').data('slidestep').magnetize(value);
+ 				});
+				
+ 				// toggle update value
+ 				$('#slider-three-value .btn').on('click', function(event) {
+ 					var value = Number($('#slider-three-value input').val());
+ 					$('#slider-three').data('slidestep').value(value);
+ 				});
+ 			  </script>
+
 
 			  
 		  </div>
 		  
 		</div>
+		
+	  <br />
+	  <br />
 	</body>
 </html>

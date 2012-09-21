@@ -16,6 +16,7 @@
  *  - Draggable
  **/
 // TODO: Use CSS3 Animations when supported.
+// FIXME: In some strange cases when using slide to click it will go value zero inspect more
 (function ($) {
 	//--------------------------------------------------------------------------
 	//
@@ -100,11 +101,19 @@
 			vars	  = null,
 			oitems	  = null;
 			
-		var draggable = null,
-			lastPos   = null,
-			meta      = {},
-			set       = new Set(),
-			magnetize = false;
+		var draggable  = null,
+			lastPos    = null,
+			lastVal    = 0,
+			manual     = true,
+			meta       = {},
+			set        = new Set(),
+			magnetize  = false,
+			click      = false,
+			events     = {
+				start: "onStart",
+				slide: "onSlide",
+				change: "onChange"
+			};
 		
 		//--------------------------------------------------------------------------
 		//
@@ -123,6 +132,8 @@
 			         .attr('unselectable', 'on');
 			
 			draggable = new Draggable(handle, rail, {
+				onChange: handleDraggableChange,
+				onStart: handleDraggableStart,
 				onEnd: handleDraggableEnd
 			});
 			
@@ -223,6 +234,31 @@
 			return;
 		}
 		
+		/**
+		 * Notify and update pos
+		 *
+		 * @param type
+		 * @param new pos
+		 * @param update
+		 */
+		function notify(type, pos, update) {
+			if (udf(update)) {
+				update = true;
+			}
+			var data = {
+				pos: pos,
+				lastPos: lastPos
+			};
+			if (update) {
+				data.pos = $.extend({}, data.pos); // shallow copy
+			}
+
+			call(events[type], data);
+			if (update) {
+				lastPos = pos;
+			}
+		}
+		
 		//--------------------------------------------------------------------------
 		//
 		//  Step/Slide Functions
@@ -240,12 +276,13 @@
 			log("moveTo", prc, val, animate);
 			var options = null,
 				pos     = {val: val, prc: prc, index: set.findIndexByPrc(prc)},
-				cpos    = $.extend({}, pos), // shallow copy to pass around
+				cpos    = {val: val, prc: prc, index: pos.index}, // shallow copy to pass around
 				data    = {
 					pos: cpos,
 					lastPos: lastPos,
 					magnetize: magnetize,
-					animate: animate
+					animate: animate,
+					click: click
 				};
 				
 			// handle magnetize case
@@ -287,8 +324,8 @@
 			
 			setVar("prc", prc);
 			setVar("value", val);
-			call("onChange", {pos: cpos});
-			lastPos = pos;
+			notify("change", pos);
+			lastVal = val;
 		}
 		
 		/**
@@ -393,9 +430,58 @@
 				x = event.clientX - $(el).offset().left;
 			}
 
-			var prc = MathExt.val2prc(x, $(el).width());
-			call("onSlide", {prc: prc, val: getVar("val")});
-			slideToPrc(prc);
+			var prc = MathExt.val2prc(x, $(el).width()),
+				val = set.findVal(prc);
+			if (vars.magnetize) {
+				prc = set.findPrcByVal(val);
+			}
+			var pos = {
+				val: val
+			};
+			pos.prc   = magnetize ? set.findPrcByVal(val) : prc;
+			pos.index = set.findIndexByPrc(pos.prc);
+			notify("slide", pos, false);
+			
+			click = true;
+			moveTo(prc, val, true);
+			click = false;
+		}
+		
+		/**
+		 * Handle draggable start
+		 *
+		 * @param data
+		 */
+		function handleDraggableStart(data) {
+			var pos = {
+				val: set.findVal(data.prc)
+			};
+			pos.prc   = magnetize ? set.findPrcByVal(val) : data.prc;
+			pos.index = set.findIndexByPrc(pos.prc);
+			notify("start", pos);
+		}
+		
+		/**
+		 * Handle draggable change
+		 *
+		 * @param data
+		 */
+		function handleDraggableChange(data) {
+			var pos = {
+				val: set.findVal(data.prc)
+			};
+			pos.prc   = magnetize ? set.findPrcByVal(val) : data.prc;
+			pos.index = set.findIndexByPrc(pos.prc);
+			
+			if (manual && (data.left === 0)) {
+				return;
+			}
+			
+			if (pos.val != lastVal) {
+				notify("change", pos, false);
+				lastVal = pos.val;
+				manual  = false;
+			}
 		}
 		
 		/**
@@ -408,6 +494,27 @@
 				magnetize = true;
 				moveToPrc(data.prc, false);
 				magnetize = false;
+			}
+			else {
+				var pos = {
+					val: set.findVal(data.prc)
+				};
+				pos.prc   = data.prc;
+				pos.index = set.findIndexByPrc(pos.prc);
+				
+				if (manual && (data.left === 0)) {
+					return;
+				}
+				
+				if (pos.val != lastVal) {
+					notify("change", pos);
+					
+					setVar("prc", pos.prc);
+					setVar("value", pos.val);
+					
+					lastVal = pos.val;
+					manual  = false;
+				}
 			}
 		}
 		
@@ -505,6 +612,7 @@
 				else {
 					stepToVal(val);
 				}
+				manual = true;
 				setVar(key);
 			},
 			val: this.value,	// shortcut notation
@@ -659,13 +767,13 @@
 			
 				var offset = value ? $(handle).width() : 0;
 				$(rail).css('right', offset + 'px');
-			
+				
+				setVar(key, value);
+				
 				// Refresh slidestep
 				if (slidestep.grid()) {
 					slidestep.grid(true);
 				}
-			
-				setVar(key, value);
 				return;				
 			},
 			
