@@ -16,7 +16,6 @@
  *  - Draggable
  **/
 // TODO: Use CSS3 Animations when supported.
-// FIXME: In some strange cases when using slide to click it will go value zero inspect more
 (function ($) {
 	//--------------------------------------------------------------------------
 	//
@@ -453,10 +452,11 @@
 		 * @param data
 		 */
 		function handleDraggableStart(data) {
+			var prcX = data.pos.prcX;
 			var pos = {
-				val: set.findVal(data.prc)
+				val: set.findVal(prcX)
 			};
-			pos.prc   = magnetize ? set.findPrcByVal(val) : data.prc;
+			pos.prc   = magnetize ? set.findPrcByVal(val) : prcX;
 			pos.index = set.findIndexByPrc(pos.prc);
 			notify("start", pos);
 		}
@@ -467,15 +467,12 @@
 		 * @param data
 		 */
 		function handleDraggableChange(data) {
-			var pos = {
-				val: set.findVal(data.prc)
+			var prcX = data.pos.prcX;
+			var pos  = {
+				val: set.findVal(prcX)
 			};
-			pos.prc   = magnetize ? set.findPrcByVal(val) : data.prc;
+			pos.prc   = magnetize ? set.findPrcByVal(val) : prcX;
 			pos.index = set.findIndexByPrc(pos.prc);
-			
-			if (manual && (data.left === 0)) {
-				return;
-			}
 			
 			if (pos.val != lastVal) {
 				notify("change", pos, false);
@@ -490,21 +487,18 @@
 		 * @param event
 		 */
 		function handleDraggableEnd(data) {
+			var prcX = data.pos.prcX;
 			if (vars.magnetize) {
 				magnetize = true;
-				moveToPrc(data.prc, false);
+				moveToPrc(prcX, false);
 				magnetize = false;
 			}
 			else {
 				var pos = {
-					val: set.findVal(data.prc)
+					val: set.findVal(prcX)
 				};
-				pos.prc   = data.prc;
+				pos.prc   = prcX;
 				pos.index = set.findIndexByPrc(pos.prc);
-				
-				if (manual && (data.left === 0)) {
-					return;
-				}
 				
 				if (pos.val != lastVal) {
 					notify("change", pos);

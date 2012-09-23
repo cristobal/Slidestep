@@ -27,28 +27,36 @@
 	//-------------------------------------------------------------------------	
 	
 	/* check if variable is undefined */
-	var udf		= function (v) { return typeof(v) === "undefined"; };
+	var udf		 = function (v) { return typeof(v) === "undefined"; };
 	
 	/* convert value to prc */
 	var val2prc = function (x, t) { return (100 * x) / t; };		
 	
 	/* default options */
 	var defaults = {
-		usePercentage: true,
+		adjustOffset:  true, /* adjust in respect to the start dragging point */
+		usePercentage: true, /* wether to use percentage or pixels, default % */
+		updatePos:     true,
+		
+		
 		onStart:  $.noop,
-		//onMove:   $.noop,
 		onChange: $.noop,
 		onEnd:    $.noop
 	};
 	
 	/* events & mobile */
 	var isMobile = /android|iphone|ipad|mobile/i.test(navigator.userAgent);
-	var events = {
+	var events   = {
 		"click"  : isMobile ? "touchstart" : "click",
 		"down"   : isMobile ? "touchstart" : "mousedown",
 		"move"   : isMobile ? "touchmove"  : "mousemove",
 		"up"     : isMobile ? "touchend"   : "mouseup",
 		"cancel" : "touchcancel"
+	};
+	var triggers = {
+		"change": "onChange",
+		"start": "onStart",
+		"end": "onEnd"
 	};
 
 	
@@ -63,10 +71,28 @@
 		
 		var meta        = {},
 			drag        = false,
-			lastLeft    = $(element).position().left,
-			lastPrc		= val2prc(lastLeft, $(container).width()),
-			lastEvent   = null,
-			originEvent = null;
+			dragOrigin  = {
+				x: 0,
+				y: 0
+			},
+			pos = {
+				x: 0,
+				y: 0,
+				prcX: 0,
+				prxY: 0
+			},
+			touchOrigin = {
+				x: 0,
+				y: 0
+			},
+			lastEvent   = null;
+		
+		var minX = 0,
+			maxX = 0,
+			minY = 0,
+			maxY = 0,
+			offsetX = 0,
+			offsetY = 0;
 
 			
 		//--------------------------------------------------------------------------
@@ -76,13 +102,17 @@
 		//-------------------------------------------------------------------------	
 		
 		/**
-		 * Call function
+		 * Trigger
 		 *
-		 * @param cb
-		 * @param data
+		 * @param eventType
 		 */
-		function call(cb, data) {
+		function trigger(eventType) {
+			var cb = triggers[eventType];
 			if (vars[cb]) {
+				var data = {
+					event: event,
+					pos:   $.extend({}, pos)
+				};
 				vars[cb](data);
 			}
 		}
@@ -92,21 +122,27 @@
 		 *
 		 * @param val The new left value where to move the object
 		 */
-		function moveTo(val) {
-
-			if (lastLeft != val) {
-				var prc = val2prc(val, $(container).width());
+		function moveTo(x, y) {
+			if (pos.x != x) {
+				var prcX = val2prc(x, $(container).width()),
+					prcY = 0;
 				if (vars.usePercentage) {
-					$(element).css('left', prc + "%");
+					$(element).css('left', prcX + "%");
 				}
 				else {
-					$(element).css('left', val + "px");
+					$(element).css('left', x + "px");
 				}
-				call("onChange", {event: lastEvent, left: val, prc: lastPrc});
 				
-				lastPrc  = prc;
-				lastLeft = val;
+				pos.y    = y;
+				pos.x    = x;
+				pos.prcX = prcX;
+				pos.prcY = prcY;
+				trigger("change");
+				
+				return true;
 			}
+			
+			return false;
 		}
 
 			
@@ -122,19 +158,49 @@
 		 * @param event
 		 */
 		function handleMouseDown(event) {
-			if (!drag) {
-				// console.log("start dragging");
-				call("onStart", {event: event, left: lastLeft, prc: lastPrc});
+			if (drag) {
+				return;
 			}
 			
-			drag = true;			
-			if (isMobile) {
-				var orig     = event.originalEvent,
-					position = $(element).position();
-				
-				originEvent  = {x: orig.changedTouches[0].pageX - position.left};				
+			var x = 0, 
+				y = 0, 
+				offset   = $(element).offset(),
+				position = $(element).position();
+			
+			x = event.offsetX;
+			if (udf(offset.x)) {
+				x = event.clientX - offset.left;
 			}
+			
+			y = event.offsetY;
+			if (udf(y)) {
+				y = event.clientY - offset.top;
+			}
+			
+			if (isMobile) {
+				var orig = event.originalEvent.changedTouches[0];
+				
+				touchOrigin.x = orig.pageX - position.left;
+				touchOrigin.y = orig.pageY - position.top;
+			}
+			
+			dragOrigin.x = x;
+			dragOrigin.y = y;
+			
+			pos.x     = position.left;
+			pos.y     = position.top;
+			pos.prcX  = val2prc(pos.x, $(container).width());
+			pos.prcY  = val2prc(pos.y, $(container).height());
+			
+			maxX = $(container).width();
+			maxY = $(container).height();
+			
+			offsetX = vars.adjustOffset ? dragOrigin.x : 0;
+			offsetY = vars.adjustOffset ? dragOrigin.y : 0;
+			
 			lastEvent = event;
+			trigger("start");
+			drag      = true;
 			return false;
 		}
 		
@@ -146,13 +212,11 @@
 		 */
 		function handleMouseUp(event) {
 			if (drag) {
-				// console.log("stop dragging");
-				call("onEnd", {event: lastEvent, left: lastLeft, prc: lastPrc});
+				trigger("end");
 			}
 			
-			drag      = false;
-			lastEvent = null;
-			originEvent = null;
+			drag        = false;
+			lastEvent   = null;
 		}
 		
 		/**
@@ -161,58 +225,51 @@
 		 * @param event
 		 */
 		function handleMouseMove(event) {
-			if (isMobile) {
-				return handleMouseMoveMobile(event);
-			}
-			
-			if (!drag || !lastEvent) {
-				return;
-			}
-			
-			var diff = lastEvent.pageX - event.pageX,
-				min  = 0,
-				max  = $(container).width(),
-				left = $(element).position().left;
-				
-			left -= diff;
-			if (left < min) {
-				left = min;
-			}
-			else if (left > max) {
-				left = max;
-			}
-			
-			moveTo(left);
-			
-			lastEvent = event;
-			return false;
-		}
-		
-		/**
-		 * Handle mouse move mobile
-		 *
-		 * @param event
-		 */
-		function handleMouseMoveMobile(event) {
-			if (!drag || !event) {
+			if (!drag || !lastEvent || !event) {
 				return true;
 			}
 			
-			var orig = (event.originalEvent.touches[0] || event.originalEvent.changedTouches[0]), 
-				left =  orig.pageX - originEvent.x,
-				min  = 0,
-				max  = $(container).width();
+			var x    = 0,
+				y    = 0;
 			
-			if (left < min) {
-				left = min;
+			if (isMobile) {
+				var orig = (event.originalEvent.touches[0] || event.originalEvent.changedTouches[0]);
+				x = orig.pageX - (touchOrigin.x + offsetX);
+				// y = orig.pageY - (touchOrigin.y + offsetY);
 			}
-			else if (left > max) {
-				left = max;
+			else {
+				var offset = $(container).offset();
+				x = event.clientX - (offset.left + offsetX);
+				// y = event.clientY - (offset.top  + offsetY);
+				
+				//var dx = lastEvent.pageX - event.pageX,
+				//    dy = lastEvent.pageY - event.pageY;
+				//    x -= dx,
+				//    y -= dy;
+			}
+
+			
+			if (x < minX) {
+				x = minX;
+			}
+			else if (x > maxX) {
+				x = maxX;
 			}
 			
-			moveTo(left);
+			// 
+			// if (y < minY) {
+			//  y = minY;
+			// }
+			// else if (y > maxY) {
+			//  y = maxY;
+			// }
 			
-			lastEvent = event;			
+			lastEvent = event;
+			if (moveTo(x, y)) {
+				maxX = $(container).width();
+				maxY = $(container).height();
+			}
+			
 			return false;
 		}
 		
