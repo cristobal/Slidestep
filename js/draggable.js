@@ -13,11 +13,10 @@
  * @version 0.1 ($Id$)
  * 
  **/
- // TODO: Test in IE8+
- // TODO: Test in Mobile devices
  // TODO: Add support for vertical scrolling
  // TODO: Add support for both x,y 
  // TODO: Add support for diagonal scrolling
+ // NOTE: Minimum size of what a thumb(touchable area) should have on mobile is an interesting concept/issue.
 (function ($) {
 	
 	//--------------------------------------------------------------------------
@@ -137,8 +136,8 @@
 				pos.x    = x;
 				pos.prcX = prcX;
 				pos.prcY = prcY;
-				trigger("change");
 				
+				trigger("change");
 				return true;
 			}
 			
@@ -166,23 +165,38 @@
 				y = 0, 
 				offset   = $(element).offset(),
 				position = $(element).position();
-			
-			x = event.offsetX;
-			if (udf(offset.x)) {
-				x = event.clientX - offset.left;
-			}
-			
-			y = event.offsetY;
-			if (udf(y)) {
-				y = event.clientY - offset.top;
-			}
+		
 			
 			if (isMobile) {
-				var orig = event.originalEvent.changedTouches[0];
+				var orig = event.originalEvent.changedTouches[0],
+					w    = $(element).width(),
+					h    = $(element).height();
+				
+				x = orig.clientX - offset.left;
+				if (udf(x) || (x > w) || (x < 0)) {
+					x = w / 2; 
+				}
+				
+				y = orig.clientX - offset.top;
+				if (udf(y) || (y > h) || (y < 0)) {
+					y = h / 2;
+				}
 				
 				touchOrigin.x = orig.pageX - position.left;
 				touchOrigin.y = orig.pageY - position.top;
 			}
+			else {
+				x = event.offsetX;
+				if (udf(offset.x)) {
+					x = event.clientX - offset.left;
+				}
+				
+				y = event.offsetY;
+				if (udf(y)) {
+					y = event.clientY - offset.top;
+				}
+			}
+		
 			
 			dragOrigin.x = x;
 			dragOrigin.y = y;
@@ -322,9 +336,12 @@
 			destroy: function () {
 				this.enabled(false);
 				
-				meta        = null;
+				meta = null;
+				pos  = null;
+				
+				dragOrigin  = null;
+				touchOrigin = null;
 				lastEvent   = null;
-				originEvent = null;
 			}
 		};
 	}

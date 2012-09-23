@@ -16,6 +16,9 @@
  *  - Draggable
  **/
 // TODO: Use CSS3 Animations when supported.
+// TODO: Move Grid functionality into own class
+// TODO: Create code builder
+// TODO: Use a better thumb image for illustration on mobile touch
 (function ($) {
 	//--------------------------------------------------------------------------
 	//
