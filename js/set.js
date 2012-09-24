@@ -62,6 +62,7 @@
  * @version 0.1.1
  * 
  **/
+ // TODO: Add optional precision flag for percentages.
 (function () {
 	
 	//--------------------------------------------------------------------------
