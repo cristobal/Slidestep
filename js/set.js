@@ -59,7 +59,7 @@
  * Licensed under the MIT (MIT-LICENSE.txt).
  *
  * @author Cristobal Dabed
- * @version 0.1
+ * @version 0.1.1
  * 
  **/
 (function () {
@@ -71,9 +71,6 @@
 	//-------------------------------------------------------------------------	
 	/* check if variable is undefined */
 	var udf = function (v) { return typeof(v) === "undefined"; };
-		
-	/* normalize step by -1 since range range will return +1 item in most cases due to the <= condition */
-	var ns = function (limit, size) { return Math.round(limit / (size - 1)); };
 	
 	/**
 	 * Range
@@ -257,9 +254,9 @@
 				var values	= range(from, to, step),
 					i		= 0,
 					l		= 100,
-					s		= ns(l, values.length),
+					s		= l / (values.length - 1),
 					prcs	= range(i, l, s);  
-				
+					
 				// should the case be that the prcs.length be an item less than the values we append the last value
 				if (prcs.length < values.length) {
 					prcs.push(l);
@@ -441,6 +438,6 @@
 			}
 		};	
 	}
-
+	
 	window.Set = Set;
 })(); 

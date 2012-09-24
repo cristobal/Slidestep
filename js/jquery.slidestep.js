@@ -15,6 +15,7 @@
  *  - Set
  *  - Draggable
  **/
+// TODO: Support fixed pixels also
 // TODO: Add support for slide event
 // TODO: Suport following syntax format also "$(selector).slidestep("value", val)" for setting properties.
 // TODO: Trigger events with callback values more like the jquery notation format
