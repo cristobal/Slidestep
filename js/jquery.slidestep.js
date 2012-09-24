@@ -15,7 +15,11 @@
  *  - Set
  *  - Draggable
  **/
+// TODO: Add support for slide event
+// TODO: Suport following syntax format also "$(selector).slidestep("value", val)" for setting properties.
+// TODO: Trigger events with callback values more like the jquery notation format
 // TODO: Use CSS3 Animations when supported.
+// TODO: Add range support
 // TODO: Move Grid functionality into own class
 // TODO: Create code builder
 // TODO: Use a better thumb image for illustration on mobile touch
@@ -686,7 +690,7 @@
 					if (isObj) {
 						// When obj specified by user create shallow copy of objects
 						oitems = new Array(items.length);
-						for (i = items.length; n--;) {
+						for (i = items.length; i--;) {
 							oitems[i] = {
 								prc: items[i].prc,
 								val: items[i].val

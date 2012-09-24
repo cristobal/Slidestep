@@ -109,7 +109,7 @@
 			var cb = triggers[eventType];
 			if (vars[cb]) {
 				var data = {
-					event: event,
+					event: lastEvent,
 					pos:   $.extend({}, pos)
 				};
 				vars[cb](data);
